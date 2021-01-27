@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>markdown 高亮渲染</title>
+  <link href="./render.css" rel="stylesheet">
+ <!--  <link href="https://cdn.bootcdn.net/ajax/libs/prism/1.22.0/themes/prism.min.css" rel="stylesheet"> -->
+<!--   <link href="https://cdn.bootcdn.net/ajax/libs/prism/1.22.0/themes/prism-dark.min.css" rel="stylesheet"> -->
+<!-- <link href="https://cdn.bootcdn.net/ajax/libs/prism/1.22.0/themes/prism-twilight.min.css" rel="stylesheet"> -->
+<!-- <link href="https://cdn.bootcdn.net/ajax/libs/prism/1.22.0/themes/prism-tomorrow.min.css" rel="stylesheet"> -->
+<!-- <link href="https://cdn.bootcdn.net/ajax/libs/prism/1.22.0/themes/prism-solarizedlight.min.css" rel="stylesheet"> -->
+<!-- <link href="https://cdn.bootcdn.net/ajax/libs/prism/1.22.0/themes/prism-okaidia.min.css" rel="stylesheet"> -->
+
+  <script src="./md.js"></script>
+  <script src="./toc.js"></script>
+  <script src="./anchor.js"></script>
+  <script src="https://cdn.bootcdn.net/ajax/libs/prism/1.22.0/prism.min.js"></script>
+  <script src="https://cdn.bootcdn.net/ajax/libs/prism/1.22.0/plugins/autoloader/prism-autoloader.min.js"></script>
+<!--   <link href="https://cdn.bootcdn.net/ajax/libs/highlight.js/10.4.1/styles/github.min.css" rel="stylesheet"> -->
+  <!-- <script src="https://cdn.bootcdn.net/ajax/libs/prism/1.22.0/plugins/highlight-keywords/prism-highlight-keywords.min.js"></script> -->
+  <style>
+    body{
+      margin:0;
+      padding: 0;
+    }
+    #app{
+      display: flex;
+      height: 100vh;
+    }
+    #textarea{
+      flex:1;
+      padding: 20px;
+      font-size: 20px;
+      border:none;
+      outline: none;
+    }
+    #result{
+      flex:1;
+      padding: 20px;
+      border-left:1px solid #e3e4e5;
+    }
+
+  </style>
+</head>
+<body>
+  <div id="app">
+    <textarea id="textarea"></textarea>
+    <div id='result'>
+
+    </div>
+  </div>
+</body>
+<script>
+  // console.log('Prism.languages', Prism.languages)
+
+  window.Prism = window.Prism || {};
+  window.Prism.manual = true;
+  window.autoloader = Prism.plugins.autoloader;
+  autoloader.loadLanguages(['markup', 'css', 'javascript', 'bash', 'stylus', 'json'])
+
+function wrap (code, lang) {
+  if (lang === 'text') {
+    // code = escapeHtml(code)
+  }
+  return `<div class="language-${lang} extra-class"><pre v-pre class="language-${lang}"><code>${code}</code></pre></div>`
+  // return `<pre v-pre class="language-${lang}"><code>${code}</code></pre>`
+}
+
+function getLangCodeFromExtension (extension) {
+  const extensionMap = {
+    vue: 'markup',
+    html: 'markup',
+    md: 'markdown',
+    rb: 'ruby',
+    ts: 'typescript',
+    py: 'python',
+    sh: 'bash',
+    yml: 'yaml',
+    styl: 'stylus',
+    kt: 'kotlin',
+    rs: 'rust'
+  }
+
+  return extensionMap[extension] || extension
+}
+
+function superHighlight (str, lang) {
+  console.log('str', str)
+  console.log('lang', lang)
+  console.log('prism.languages[lang]', Prism.languages[lang])
+  if (!lang) {
+    return wrap(str, 'text')
+  }
+  lang = lang.toLowerCase()
+  const rawLang = lang
+
+  lang = getLangCodeFromExtension(lang)
+
+  if (!Prism.languages[lang]) {
+    try {
+      Prism.plugins.autoloader.loadLanguages([lang])
+    } catch (e) {
+      console.log(`[vuepress] Syntax highlight for language "${lang}" is not supported.`)
+    }
+  }
+  if (Prism.languages[lang]) {
+    const code = Prism.highlight(str, Prism.languages[lang], lang)
+    console.log('result',  wrap(code, rawLang));
+    return wrap(code, rawLang)
+  }
+  return wrap(str, 'text')
+}
+
+
+  window.md = window.markdownit({
+    linkify: true,
+    highlight: function (str, lang) {
+      return superHighlight(str, lang);
+    }
+  })
+  // .use(anchor).use(toc);
+
+  console.log('md', md)
+
+  // console.log('Prism.plugins', Prism.plugins)
+
+  var textarea = document.getElementById('textarea');
+  var result = document.getElementById('result');
+  var container = document.getElementById('container');
+
+  textarea.addEventListener('input', function (e) {
+    var value = e.target.value;
+    var code = md.render(value);
+    result.innerHTML=code;
+
+    console.log('md', md)
+
+  })
+
+
+</script>
+</html>
